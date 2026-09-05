@@ -15,7 +15,7 @@ are woven directly into the same narrative.
 ## How it works
 
 ```
-GitHub Actions (daily cron 06:30 UTC)
+GitHub Actions (cron 08:30 + 15:30 UTC)
         |
         v
 1. COLLECT     Google News RSS (EN + SV + GlobeNewswire press releases)
@@ -79,8 +79,10 @@ present, otherwise cloned from GitHub into `.last30days/`.
    and `BRAVE_API_KEY` (web/grounding). Locally the engine reads the last two
    from its own global config (`~/.config/last30days/.env`).
 3. Repo **Settings -> Pages**: Source = *Deploy from a branch*, Branch = `gh-pages`, `/ (root)`.
-4. The workflow runs daily at 06:30 UTC; trigger **Actions -> daily-monitor ->
-   Run workflow** for an immediate run.
+4. The workflow runs twice daily (08:30 and 15:30 UTC); trigger
+   **Actions -> daily-monitor -> Run workflow** for an immediate run.
+   Repeated runs the same day never overwrite each other — each run gets
+   its own archive page (`YYYY-MM-DD-HHMM`).
 
 ## Configuration notes
 

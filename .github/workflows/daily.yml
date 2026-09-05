@@ -2,8 +2,10 @@ name: daily-monitor
 
 on:
   schedule:
-    # 06:30 UTC daily (08:30 CEST / 07:30 CET)
-    - cron: "30 6 * * *"
+    # 08:30 UTC daily (10:30 CEST / 09:30 CET)
+    - cron: "30 8 * * *"
+    # 15:30 UTC daily (17:30 CEST / 16:30 CET)
+    - cron: "30 15 * * *"
   workflow_dispatch:
 
 permissions:
