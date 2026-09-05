@@ -1,5 +1,7 @@
 # Intrum AB Daily Monitor (int-monitor)
 
+**Live site: https://matkowpa.github.io/int-monitor/**
+
 Fully automated daily intelligence on **Intrum AB**: news, market coverage, social-media
 screening, threat analysis and sentiment — published every morning to a static website
 served by **GitHub Pages**.
@@ -55,18 +57,18 @@ python -m src.run --push
 The last30days engine is acquired automatically: local Cline skill copy if present,
 otherwise cloned from GitHub into `.last30days/`.
 
-## GitHub setup (one-time)
+## GitHub setup
 
-1. Create a **public** repository on github.com (e.g. `int-monitor`).
-2. `git remote add origin https://github.com/<YOU>/int-monitor.git` and push `main`.
+1. ~~Create a **public** repository~~ — done: https://github.com/matkowpa/int-monitor
+2. ~~Push `main`~~ — done.
 3. Repo **Settings -> Secrets and variables -> Actions**:
    add `OPENROUTER_API_KEY` (required). Optionally add `SCRAPECREATORS_API_KEY`
    to unlock X/Twitter coverage in the social screening.
 4. Trigger the workflow once: **Actions -> daily-monitor -> Run workflow**.
    The first run creates the `gh-pages` branch.
 5. Repo **Settings -> Pages**: Source = *Deploy from a branch*, Branch = `gh-pages`, `/ (root)`.
-6. Set the published URL in `config.yml` (`site.base_url`, e.g.
-   `https://<YOU>.github.io/int-monitor/`) so css/report links resolve, and push.
+6. ~~Set the published URL in `config.yml`~~ — done (`site.base_url` =
+   `https://matkowpa.github.io/int-monitor/`).
 
 ## Configuration notes
 

@@ -51,10 +51,9 @@ last30days:
   repo: "https://github.com/mvanhorn/last30days-skill"
   ref: "main"
 
-# Static site metadata. base_url MUST be set to the GitHub Pages project URL
-# after the first publish, e.g. "https://YOURUSER.github.io/int-monitor/"
-# (used as a prefix for css/report links).
+# Static site metadata. base_url is the GitHub Pages project URL
+# (prefix for css/report links).
 site:
   title: "Intrum AB Daily Monitor"
   description: "Automated daily intelligence on Intrum AB: news, social sentiment and threat screening."
-  base_url: ""
+  base_url: "https://matkowpa.github.io/int-monitor/"
