@@ -108,9 +108,13 @@ def call_openrouter(model: str, messages: list[dict], api_key: str,
             pass
         raise SynthesisError(f"OpenRouter HTTP {exc.code}: {detail}") from exc
     try:
-        content = data["choices"][0]["message"]["content"]
+        choice = data["choices"][0]
+        content = choice["message"]["content"]
+        finish_reason = choice.get("finish_reason")
     except (KeyError, IndexError, TypeError) as exc:
         raise SynthesisError(f"unexpected OpenRouter response shape: {data}") from exc
+    if finish_reason and finish_reason != "stop":
+        raise SynthesisError(f"model stopped early (finish_reason={finish_reason})")
     if not (content or "").strip():
         raise SynthesisError("empty response from OpenRouter")
     return content.strip()
@@ -143,12 +147,25 @@ def _fallback(badge: str, evidence: str, news_items: list[NewsItem], reason: str
     return "\n".join(lines)
 
 
+def _footer_hint(evidence: str) -> str:
+    """Return the engine's pass-through footer anchor line, if present.
+
+    The skill contract makes this footer the LAST line of a complete brief, so
+    its absence in the LLM answer means the response was cut off mid-sentence.
+    """
+    for line in evidence.splitlines():
+        if "All agents reported back" in line:
+            return line.strip()
+    return ""
+
+
 def synthesize(config, evidence: str, news_items: list[NewsItem]) -> str:
     """Produce the final daily brief markdown (badge line included)."""
     badge, body = split_badge(evidence)
     if not badge:
         badge = f"🌐 last30days v? · synced {date.today().isoformat()}"
     body = body.strip()
+    footer = _footer_hint(body)
 
     api_key = os.environ.get(config.api_key_env, "")
     if not api_key:
@@ -162,10 +179,24 @@ def synthesize(config, evidence: str, news_items: list[NewsItem]) -> str:
             content = call_openrouter(config.model, messages, api_key,
                                       config.temperature, config.max_tokens)
             _debug_dump(content, attempt)
+            if footer and footer not in content:
+                raise SynthesisError(
+                    "response looks truncated (engine stats footer missing)"
+                )
             return f"{badge}\n\n{_normalize_synthesis(content)}"
         except (SynthesisError, OSError, ValueError) as exc:
             last_err = exc
             log.warning("LLM synthesis attempt %d failed: %s", attempt, exc)
+            if attempt == 1:
+                # Retry once; after a truncation-style failure ask for a
+                # tighter answer so the retry fits.
+                messages = build_messages(config, body, news_items)
+                messages[-1]["content"] += (
+                    "\n\nIMPORTANT: your previous answer was cut off mid-sentence. "
+                    "Rewrite the brief noticeably more concisely (fewer, tighter "
+                    "paragraphs; still link every claim) and make sure the very "
+                    "last line is the stats footer, verbatim."
+                )
     log.warning("LLM synthesis failed after retries - publishing fallback brief")
     return _fallback(badge, body, news_items, str(last_err))
 
