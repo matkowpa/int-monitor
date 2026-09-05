@@ -120,9 +120,15 @@ def publish_site_ghpages(site_dir: Path, report_date: str) -> bool:
             if not worktree.exists():
                 break
             time.sleep(1)
-    _git(["worktree", "prune"], check=False)
-    if worktree.exists():
-        raise RuntimeError(f"could not clean the publish worktree at {worktree}")
+        _git(["worktree", "prune"], check=False)
+        if worktree.exists():
+            # Transient file locks (AV/indexer) can block the cleanup; fall
+            # back to a fresh, uniquely named worktree instead of failing.
+            worktree = Path(tempfile.gettempdir()) / (
+                "int-monitor-gh-pages-"
+                + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+            )
+            log.warning("Falling back to a fresh publish worktree: %s", worktree)
 
     remote_has_ghpages = bool(_git(["ls-remote", "--heads", "origin", "gh-pages"]).stdout.strip())
     try:
