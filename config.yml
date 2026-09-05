@@ -54,7 +54,7 @@ social:
 # LLM used to write the daily report (OpenRouter API).
 # Any chat-capable model id from https://openrouter.ai/models works here.
 llm:
-  model: "z-ai/glm-5.3"
+  model: "z-ai/glm-5.3-flash"
   temperature: 0.2
   max_tokens: 8000
   api_key_env: "OPENROUTER_API_KEY"
@@ -68,6 +68,6 @@ last30days:
 # Static site metadata. base_url is the GitHub Pages project URL
 # (prefix for css/report links).
 site:
-  title: "Intrum AB Daily Monitor"
-  description: "A daily /last30days research brief on Intrum AB: what the internet said, day by day."
+  title: "Intrum Daily Monitor"
+  description: "A daily research brief on Intrum AB: what the internet said, day by day."
   base_url: "https://matkowpa.github.io/int-monitor/"
