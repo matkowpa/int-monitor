@@ -12,6 +12,8 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
+import time
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -107,11 +109,20 @@ def publish_site_ghpages(site_dir: Path, report_date: str) -> bool:
         log.warning("No built site at %s - skipping publish", site_dir)
         return False
 
-    worktree = ROOT / ".gh-pages-wt"
+    # Use a worktree OUTSIDE the repo dir: the repo lives in OneDrive, whose
+    # file locks make git worktrees flaky there (partial rmtree -> non-empty
+    # directory -> "worktree add" refuses).
+    worktree = Path(tempfile.gettempdir()) / "int-monitor-gh-pages-wt"
     if worktree.exists():
         _git(["worktree", "remove", "--force", str(worktree)], check=False)
-        shutil.rmtree(worktree, ignore_errors=True)
+        for _ in range(3):
+            shutil.rmtree(worktree, ignore_errors=True)
+            if not worktree.exists():
+                break
+            time.sleep(1)
     _git(["worktree", "prune"], check=False)
+    if worktree.exists():
+        raise RuntimeError(f"could not clean the publish worktree at {worktree}")
 
     remote_has_ghpages = bool(_git(["ls-remote", "--heads", "origin", "gh-pages"]).stdout.strip())
     try:

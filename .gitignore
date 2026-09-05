@@ -8,9 +8,6 @@ venv/
 .last30days/
 .last30days-run/
 
-# temporary worktree for gh-pages publishing
-.gh-pages-wt/
-
 # site build output (pushed to gh-pages branch by CI, not committed to main)
 site/
 
