@@ -5,13 +5,14 @@ on:
     # Times are POLISH (Europe/Warsaw). GitHub cron is UTC-only and does not
     # know DST, so each run time is split by season: EU summer time ~= Mar-Oct
     # (UTC+2), winter ~= Nov-Feb (UTC+1); off by a few days around the DST
-    # switch weekends.
+    # switch weekends. NOTE: GitHub's cron rejects wrapping ranges, so the
+    # winter months are written as the list 1,2,11,12 (not 11-2).
     #   08:30 PL = 06:30 UTC (CEST) / 07:30 UTC (CET)
     #   15:30 PL = 13:30 UTC (CEST) / 14:30 UTC (CET)
-    - cron: "30 6 3-10 * *"    # 08:30 PL, Mar-Oct (CEST)
-    - cron: "30 13 3-10 * *"   # 15:30 PL, Mar-Oct (CEST)
-    - cron: "30 7 11-2 * *"    # 08:30 PL, Nov-Feb (CET)
-    - cron: "30 14 11-2 * *"   # 15:30 PL, Nov-Feb (CET)
+    - cron: "30 6 3-10 * *"       # 08:30 PL, Mar-Oct (CEST)
+    - cron: "30 13 3-10 * *"      # 15:30 PL, Mar-Oct (CEST)
+    - cron: "30 7 1,2,11,12 * *"  # 08:30 PL, Nov-Feb (CET)
+    - cron: "30 14 1,2,11,12 * *" # 15:30 PL, Nov-Feb (CET)
   workflow_dispatch:
 
 permissions:
