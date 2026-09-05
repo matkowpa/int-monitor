@@ -17,7 +17,8 @@ import time
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-from . import collect_news, collect_social, site as site_mod
+from . import collect_news, collect_social, notify as notify_mod
+from . import site as site_mod
 from . import synthesize as synth_mod
 from .config import load_config
 from .models import NewsItem, State
@@ -265,7 +266,8 @@ def main(argv: list[str] | None = None) -> int:
     # 6. Publish
     if args.push:
         git_commit_state(report_date)
-        publish_site_ghpages(SITE_DIR, report_date)
+        if publish_site_ghpages(SITE_DIR, run_id):
+            notify_mod.notify_publish(config, run_id, len(new_items), len(evidence))
 
     log.info("Done: %d new item(s), evidence %d chars -> %s",
              len(new_items), len(evidence), (REPORTS_DIR / f"{run_id}.md").name)

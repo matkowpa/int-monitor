@@ -77,7 +77,8 @@ present, otherwise cloned from GitHub into `.last30days/`.
 2. Repo **Settings -> Secrets and variables -> Actions**:
    add `OPENROUTER_API_KEY` (required), `SCRAPECREATORS_API_KEY` (Instagram/TikTok)
    and `BRAVE_API_KEY` (web/grounding). Locally the engine reads the last two
-   from its own global config (`~/.config/last30days/.env`).
+   from its own global config (`~/.config/last30days/.env`). Optionally add
+   `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` for notifications (see below).
 3. Repo **Settings -> Pages**: Source = *Deploy from a branch*, Branch = `gh-pages`, `/ (root)`.
 4. The workflow runs twice daily at 08:30 and 15:30 **Warsaw time** (the
    month-split crons keep the times across DST changes); trigger
@@ -96,6 +97,23 @@ present, otherwise cloned from GitHub into `.last30days/`.
 - **Evidence size**: `social.evidence_max_chars` caps what is fed to the LLM.
 - **Engine version**: `last30days.ref` in `config.yml` — pin a tag/commit for
   reproducible CI runs.
+
+## Telegram notifications (optional)
+
+Every published page sends a short Telegram message (title, link to the new
+brief, news/evidence counts). Setup:
+
+1. Create a bot with [@BotFather](https://t.me/BotFather) (`/newbot`) and copy
+   the token.
+2. Send any message to your bot, then open
+   `https://api.telegram.org/bot<TOKEN>/getUpdates` and read `chat.id`
+   (for a channel: add the bot as admin there; the id looks like `-100...`).
+3. Add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` as repo secrets
+   (Settings -> Secrets and variables -> Actions). To also get notifications
+   for local `--push` runs, set both as user environment variables on your
+   machine.
+
+Without the secrets the pipeline simply skips notifications.
 
 ## Limitations
 

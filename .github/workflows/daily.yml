@@ -44,4 +44,7 @@ jobs:
           SCRAPECREATORS_API_KEY: ${{ secrets.SCRAPECREATORS_API_KEY }}
           # Optional: revives the engine's web/grounding source.
           BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+          # Optional: Telegram notification on every published site update.
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python -m src.run --push
