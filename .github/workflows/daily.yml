@@ -32,7 +32,8 @@ jobs:
       - name: Run daily monitor (collect -> synthesize -> publish)
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          # Optional: unlocks X/Twitter and richer Reddit/YouTube data in the
-          # last30days engine. Leave unset if you do not have a key.
+          # Optional: unlocks Instagram/TikTok in the last30days engine.
           SCRAPECREATORS_API_KEY: ${{ secrets.SCRAPECREATORS_API_KEY }}
+          # Optional: revives the engine's web/grounding source.
+          BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
         run: python -m src.run --push

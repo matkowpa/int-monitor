@@ -71,9 +71,9 @@ present, otherwise cloned from GitHub into `.last30days/`.
 
 1. Repo: https://github.com/matkowpa/int-monitor (public)
 2. Repo **Settings -> Secrets and variables -> Actions**:
-   add `OPENROUTER_API_KEY` (required). Add `SCRAPECREATORS_API_KEY` to unlock
-   Instagram/TikTok coverage in CI — locally the engine reads it from its own
-   global config (`~/.config/last30days/.env`).
+   add `OPENROUTER_API_KEY` (required), `SCRAPECREATORS_API_KEY` (Instagram/TikTok)
+   and `BRAVE_API_KEY` (web/grounding). Locally the engine reads the last two
+   from its own global config (`~/.config/last30days/.env`).
 3. Repo **Settings -> Pages**: Source = *Deploy from a branch*, Branch = `gh-pages`, `/ (root)`.
 4. The workflow runs daily at 06:30 UTC; trigger **Actions -> daily-monitor ->
    Run workflow** for an immediate run.
@@ -97,4 +97,6 @@ present, otherwise cloned from GitHub into `.last30days/`.
   whatever the keyless endpoints return — quiet results are normal for a
   company with little social chatter. Web/grounding needs a `BRAVE_API_KEY` or
   `SERPER_API_KEY` for the engine; Instagram/TikTok need `SCRAPECREATORS_API_KEY`.
+  All three are configured as repo secrets, so CI runs get the full coverage;
+  local runs degrade gracefully when a key is missing.
 - Google News links are redirects; RSS dedupe is by title, not final URL.
