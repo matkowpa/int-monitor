@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}{{ date }} — {{ site_title }}{% endblock %}
+{% block title %}{{ run_id }} — {{ site_title }}{% endblock %}
 {% block content %}
 <section class="report-card">
   <p class="backlink"><a href="{{ base }}index.html">&larr; Latest brief</a></p>
   <div class="report-head">
-    <span class="report-date">{{ date }}</span>
+    <span class="report-date">{{ label }}</span>
   </div>
   <div class="report-body">{{ report_html | safe }}</div>
 </section>

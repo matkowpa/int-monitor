@@ -30,6 +30,9 @@ GitHub Actions (daily cron 06:30 UTC)
                (day-by-day archive; gh-pages is mirrored to the new build)
 ```
 
+- **Every run is kept**: the first run of a day is `reports/YYYY-MM-DD.md`;
+  any later run the same day becomes `YYYY-MM-DD-HHMM.md` (UTC) — repeated
+  queries never overwrite each other and each run gets its own archive page.
 - **Badge & footer**: the engine's first line (badge) is passed through
   programmatically, so every brief is authentic to the skill's contract even
   if the LLM misbehaves.

@@ -2,17 +2,17 @@
 {% block content %}
 <section class="report-card">
   <div class="report-head">
-    <span class="report-date">{{ latest.date }}</span>
+    <span class="report-date">{{ latest.label }}</span>
     <span class="tagline">latest daily brief</span>
   </div>
   <div class="report-body">{{ report_html | safe }}</div>
 </section>
 {% if older %}
 <section class="archive">
-  <h2>Previous days</h2>
+  <h2>Previous runs</h2>
   <ul>
     {% for m in older %}
-    <li><a href="{{ base }}reports/{{ m.date }}.html">{{ m.date }}</a></li>
+    <li><a href="{{ base }}reports/{{ m.run_id }}.html">{{ m.label }}</a></li>
     {% endfor %}
   </ul>
 </section>

@@ -186,6 +186,20 @@ def _mock_inputs() -> tuple[list[NewsItem], str]:
     return news, evidence
 
 
+def _next_run_id(base: str) -> str:
+    """Unique report id: the first run of a day keeps the plain date; later
+    runs that day get a UTC `HHMM` suffix so nothing is ever overwritten."""
+    if not (REPORTS_DIR / f"{base}.md").exists():
+        return base
+    stamp = datetime.now(timezone.utc).strftime("%H%M")
+    run_id = f"{base}-{stamp}"
+    n = 2
+    while (REPORTS_DIR / f"{run_id}.md").exists():
+        run_id = f"{base}-{stamp}-{n}"
+        n += 1
+    return run_id
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="int-monitor", description=__doc__)
     parser.add_argument("--date", help="report date (YYYY-MM-DD); default: today (UTC)")
@@ -203,6 +217,7 @@ def main(argv: list[str] | None = None) -> int:
 
     config = load_config(ROOT / "config.yml")
     report_date = args.date or date.today().isoformat()
+    run_id = _next_run_id(report_date)
 
     # 1. Collect
     state = _load_state()
@@ -224,16 +239,17 @@ def main(argv: list[str] | None = None) -> int:
     # 2. Synthesize (the badge line is handled programmatically)
     brief_md = synth_mod.synthesize(config, evidence, new_items)
 
-    # 3. Write report artifacts
+    # 3. Write report artifacts (never overwrite: run_id is unique per run)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    (REPORTS_DIR / f"{report_date}.md").write_text(brief_md + "\n", encoding="utf-8")
+    (REPORTS_DIR / f"{run_id}.md").write_text(brief_md + "\n", encoding="utf-8")
     meta = {
         "date": report_date,
+        "run_id": run_id,
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "news_count": len(new_items),
         "evidence_chars": len(evidence),
     }
-    (REPORTS_DIR / f"{report_date}.meta.json").write_text(
+    (REPORTS_DIR / f"{run_id}.meta.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
 
@@ -252,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:
         publish_site_ghpages(SITE_DIR, report_date)
 
     log.info("Done: %d new item(s), evidence %d chars -> %s",
-             len(new_items), len(evidence), (REPORTS_DIR / f"{report_date}.md").name)
+             len(new_items), len(evidence), (REPORTS_DIR / f"{run_id}.md").name)
     return 0
 
 
