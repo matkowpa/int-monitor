@@ -23,6 +23,10 @@ GitHub Actions (daily cron 06:30 UTC)
 
 - **"New since last publish"**: every run dedupes against `data/state.json`
   (seen item ids), so the report focuses on what appeared since the last run.
+- **Weekly context**: every report contains a **"Last Week Highlights"** section —
+  an LLM synthesis of the previous 7 days plus a last-month overview (sentiment
+  trend, reports count, top ongoing stories), built from the site's own report
+  history.
 - **Story continuity**: `data/stories.json` tracks ongoing stories between runs;
   the LLM is asked to update statuses (active / updated / resolved).
 - **Never-breaks design**: a failed feed, empty social screening or LLM outage

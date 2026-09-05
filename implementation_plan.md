@@ -127,4 +127,24 @@ Validation by execution (no test framework — pipeline project):
 - Adding `SCRAPECREATORS_API_KEY` as a repo secret later activates X coverage without code changes.
 - Deviation from original sketch: `config.yml` parsing adds `pyyaml` (stdlib has no YAML); state files are JSON.
 
+## Extension (2026-09-05): "Last Week Highlights" section
+
+Every daily report now includes an LLM-written `## Last Week Highlights` section
+(second H2, after "New Today"): a synthesis of the previous 7 days of reports
+(headlines, highlights, sentiment, threats) plus a last-month overview
+(sentiment trend, reports count, top ongoing stories). Data source: the
+project's own history (`reports/*.meta.json`, `data/stories.json`) — no new
+collection, no new pages, no state changes.
+
+- `src/run.py`: `_week_context(stories)` builds the context (excludes today;
+  caps: 7 week entries, 30 month points); passed into `analyze()`.
+- `src/analyze.py`: `week_context` parameter on `build_messages`, `analyze`,
+  `build_fallback_report`; prompt rules added; the fallback report renders a
+  mechanical version of the section (headline list + month one-liner) so the
+  section exists even without the LLM.
+- Section placement: `## New Today`, `## Last Week Highlights`,
+  `## Ongoing Stories`, `## Social & Sentiment`, `## Threats & Risks`.
+- Fewer than 2 prior reports → "weekly tracking has just begun".
+
+
 

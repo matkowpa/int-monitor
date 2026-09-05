@@ -48,7 +48,8 @@ def _serialize_items(new_items: list[NewsItem], social_items: list[SocialItem]) 
 
 
 def build_messages(config, new_items: list[NewsItem], social_items: list[SocialItem],
-                   stories: list[Story], prev_headline: str | None) -> list[dict]:
+                   stories: list[Story], prev_headline: str | None,
+                   week_context: dict | None = None) -> list[dict]:
     today = date.today().isoformat()
     system = f"""You are a corporate intelligence analyst producing a DAILY monitoring report on {config.company} for internal stakeholders. Today is {today}.
 
@@ -58,10 +59,12 @@ RULES:
 - Write the report in {config.report_language}.
 - report_md must use exactly these H2 sections, in this order:
   ## New Today
+  ## Last Week Highlights
   ## Ongoing Stories
   ## Social & Sentiment
   ## Threats & Risks
 - "New Today": the most important NEW items since the last report; group related items; each entry = title as markdown link + 1-3 sentence summary.
+- "Last Week Highlights": synthesize the past 7 days using ONLY the supplied last_week_context (prior daily reports: headlines, highlights, sentiments, threats). Add a 1-2 sentence last-month overview: sentiment trend direction, dominant themes, and the most significant ongoing stories (from last_month.top_stories). Never invent developments. If fewer than 2 prior reports exist, state briefly that weekly tracking has just begun.
 - "Ongoing Stories": updates on the previously tracked stories supplied in context. If a story has no development today, omit it. Explicitly mark stories that are now resolved.
 - "Social & Sentiment": what social/alternative sources say; notable posts with links; overall tone. If no social data was supplied, say screening found nothing notable.
 - "Threats & Risks": potential threats to the company (reputational, legal, financial, operational) derived ONLY from the supplied material; each with a severity (high/medium/low).
@@ -79,6 +82,7 @@ STORIES RULES: the stories array is the FULL updated story list. Keep the ids of
     user = {
         "previous_headline": prev_headline,
         "current_stories": [s.to_dict() for s in stories],
+        "last_week_context": week_context or {},
         **_serialize_items(new_items, social_items),
     }
     return [
@@ -212,7 +216,8 @@ def parse_analysis(text: str) -> AnalysisResult:
     )
 
 def build_fallback_report(config, new_items: list[NewsItem], social_items: list[SocialItem],
-                          stories: list[Story], reason: str) -> AnalysisResult:
+                          stories: list[Story], reason: str,
+                          week_context: dict | None = None) -> AnalysisResult:
     """Templated report used when the LLM is unavailable or returns invalid output."""
     today = date.today().isoformat()
     lines = ["## New Today", ""]
@@ -222,6 +227,26 @@ def build_fallback_report(config, new_items: list[NewsItem], social_items: list[
             lines.append(f"- [{it.title}]({it.url}) — *{it.source}*, {pub}")
     else:
         lines.append("_No new items found in the monitored feeds._")
+    lines += ["", "## Last Week Highlights", ""]
+    if week_context:
+        week = week_context.get("last_week") or []
+        if week:
+            lines.append("Previous daily headlines:")
+            lines += [f"- {e.get('date', '')}: {e.get('headline', '')}" for e in week]
+        else:
+            lines.append("_Weekly tracking has just begun._")
+        month = week_context.get("last_month") or {}
+        scores = [p.get("score") for p in (month.get("sentiment_series") or [])
+                  if isinstance(p.get("score"), (int, float))]
+        month_bits = [f"{month.get('reports_count', 0)} report(s) in the last 30 days"]
+        if scores:
+            month_bits.append(f"average sentiment {sum(scores) / len(scores):+.2f}")
+        top = month.get("top_stories") or []
+        if top:
+            month_bits.append("key stories: " + "; ".join(str(s.get("title") or "") for s in top[:3]))
+        lines.append("Last month: " + ", ".join(month_bits) + ".")
+    else:
+        lines.append("_Weekly history unavailable in this run._")
     lines += ["", "## Ongoing Stories", ""]
     if stories:
         for s in stories:
@@ -248,13 +273,16 @@ def build_fallback_report(config, new_items: list[NewsItem], social_items: list[
 
 
 def analyze(config, new_items: list[NewsItem], social_items: list[SocialItem],
-            stories: list[Story], prev_headline: str | None) -> AnalysisResult:
+            stories: list[Story], prev_headline: str | None,
+            week_context: dict | None = None) -> AnalysisResult:
     api_key = os.environ.get(config.api_key_env, "")
     if not api_key:
         log.warning("%s not set - publishing fallback report", config.api_key_env)
-        return build_fallback_report(config, new_items, social_items, stories, "no API key")
+        return build_fallback_report(config, new_items, social_items, stories, "no API key",
+                                     week_context)
 
-    base_messages = build_messages(config, new_items, social_items, stories, prev_headline)
+    base_messages = build_messages(config, new_items, social_items, stories, prev_headline,
+                                   week_context)
     last_err, messages = None, base_messages
     for attempt in (1, 2):
         # Attempt 1 uses provider JSON mode (guaranteed-valid JSON on supporting
@@ -277,7 +305,8 @@ def analyze(config, new_items: list[NewsItem], social_items: list[SocialItem],
                      "Return ONLY the corrected single JSON object."},
                 ]
     log.warning("LLM failed after retries - publishing fallback report")
-    return build_fallback_report(config, new_items, social_items, stories, str(last_err))
+    return build_fallback_report(config, new_items, social_items, stories, str(last_err),
+                                 week_context)
 
 
 def prune_stories(stories: list[Story], today: str, cap: int = 20) -> list[Story]:

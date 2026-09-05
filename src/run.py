@@ -61,6 +61,47 @@ def _prev_headline() -> str | None:
     return str(metas[0].get("headline")) if metas else None
 
 
+def _week_context(stories: list[Story]) -> dict:
+    """Weekly/monthly context for the report, built from prior daily reports.
+
+    Excludes today (the report being written) — strictly previous days.
+    """
+    metas = site_mod.load_report_metas(REPORTS_DIR)
+    today = date.today().isoformat()
+    prior = [m for m in metas if str(m.get("date", "")) < today]
+
+    def _entry(meta: dict) -> dict:
+        sentiment = meta.get("sentiment") or {}
+        return {
+            "date": meta.get("date", ""),
+            "headline": meta.get("headline", ""),
+            "highlights": [str(h) for h in (meta.get("highlights") or [])][:4],
+            "sentiment": sentiment.get("score"),
+            "sentiment_label": sentiment.get("label", ""),
+            "top_threats": [str(t.get("title") or "") for t in (meta.get("threats") or [])][:3],
+        }
+
+    last_week = [_entry(m) for m in prior[:7]]
+    month = prior[:30]
+    scores = [
+        {"date": m.get("date", ""), "score": (m.get("sentiment") or {}).get("score")}
+        for m in month
+        if isinstance((m.get("sentiment") or {}).get("score"), (int, float))
+    ]
+    top_stories = [
+        {"id": s.id, "title": s.title, "status": s.status, "summary": s.summary}
+        for s in stories if s.status in ("active", "updated")
+    ][:10]
+    return {
+        "last_week": last_week,
+        "last_month": {
+            "reports_count": len(month),
+            "sentiment_series": scores,
+            "top_stories": top_stories,
+        },
+    }
+
+
 # --- git publishing helpers -------------------------------------------------
 
 def _git(args: list[str], cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
@@ -210,7 +251,8 @@ def main(argv: list[str] | None = None) -> int:
 
     # 2. Analyze
     stories = _load_stories()
-    result = analyze_mod.analyze(config, new_items, social_items, stories, _prev_headline())
+    result = analyze_mod.analyze(config, new_items, social_items, stories, _prev_headline(),
+                                 _week_context(stories))
 
     # 3. Write report artifacts
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
