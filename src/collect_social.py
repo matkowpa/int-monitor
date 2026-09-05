@@ -55,7 +55,8 @@ def ensure_engine(config) -> Path:
 
 
 def run_evidence_pack(topic: str, days: int, save_dir: Path, engine_path: Path,
-                      search: str = "", subreddits: str = "") -> str:
+                      search: str = "", subreddits: str = "",
+                      plan_path: str = "") -> str:
     """Run the engine headless and return its stdout (the evidence pack).
 
     Returns "" on failure — a broken engine must never abort the run.
@@ -74,6 +75,11 @@ def run_evidence_pack(topic: str, days: int, save_dir: Path, engine_path: Path,
         cmd += ["--search", search.strip()]
     if subreddits.strip():
         cmd += ["--subreddits", subreddits.strip()]
+    if plan_path and os.path.isfile(plan_path):
+        # Fixed query plan (engine-plan.json): deterministic subqueries that
+        # skip the engine's internal LLM planner, so every run covers community
+        # chatter, corporate/financials and transaction stories.
+        cmd += ["--plan", plan_path]
     env = dict(os.environ)
     log.info("Running last30days engine (this can take a few minutes)...")
     try:

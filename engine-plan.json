@@ -1,0 +1,25 @@
+{
+  "intent": "factual",
+  "freshness_mode": "strict_recent",
+  "cluster_mode": "story",
+  "subqueries": [
+    {
+      "label": "Community chatter",
+      "search_query": "Intrum",
+      "ranking_query": "Intrum debt collection company community discussion",
+      "sources": ["reddit", "youtube"]
+    },
+    {
+      "label": "Corporate & financials",
+      "search_query": "\"Intrum AB\" earnings OR restructuring OR \"press release\"",
+      "ranking_query": "Intrum AB corporate financial and restructuring news",
+      "sources": ["grounding"]
+    },
+    {
+      "label": "Transactions & market structure",
+      "search_query": "Intrum Cepal OR Greece OR divestment OR \"asset sale\"",
+      "ranking_query": "Intrum transactions divestments and debt servicing market structure",
+      "sources": ["grounding"]
+    }
+  ]
+}

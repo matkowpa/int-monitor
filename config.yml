@@ -19,6 +19,8 @@ rss_sources:
     url: "https://news.google.com/rss/search?q=Intrum&hl=en-US&gl=US&ceid=US:en"
   - name: "Google News (SV)"
     url: "https://news.google.com/rss/search?q=Intrum&hl=sv-SE&gl=SE&ceid=SE:sv"
+  - name: "NPL Confidential (Greek NPL/servicing trade press)"
+    url: "https://nplconfidential.com/feed/"
   - name: "Intrum press releases (GlobeNewswire via Google News)"
     url: "https://news.google.com/rss/search?q=Intrum+site:globenewswire.com&hl=en-US&gl=US&ceid=US:en"
 
@@ -41,6 +43,11 @@ social:
   # Instagram/TikTok need SCRAPECREATORS_API_KEY (engine config locally,
   # repo secret in CI).
   search: "reddit,tiktok,instagram,youtube,hackernews,polymarket,github,grounding"
+  # Fixed JSON query plan passed to the engine via --plan (skips its internal
+  # LLM planner): guarantees every run searches community chatter AND
+  # corporate/financial news AND transaction/market-structure stories (Cepal,
+  # Greece, divestments). See engine-plan.json.
+  plan: "engine-plan.json"
   # Hard cap on the evidence pack fed to the LLM (characters).
   evidence_max_chars: 35000
 

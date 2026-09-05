@@ -43,6 +43,7 @@ GitHub Actions (daily cron 06:30 UTC)
 | Path | Purpose |
 | --- | --- |
 | `config.yml` | All tuning: feeds, terms, sources, model, subreddits, site metadata |
+| `engine-plan.json` | Fixed last30days query plan (deterministic subqueries: community, corporate, transactions) |
 | `src/` | Pipeline code (collect_news, collect_social, synthesize, site, run) |
 | `reports/` | Generated daily briefs (`YYYY-MM-DD.md` + `.meta.json`) |
 | `data/` | Persisted state (seen RSS ids) |

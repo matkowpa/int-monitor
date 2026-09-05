@@ -19,6 +19,7 @@ class Config:
     social_topic: str
     social_days: int
     social_search: str
+    social_plan: str
     subreddits: str
     evidence_max_chars: int
     model: str
@@ -65,6 +66,7 @@ def load_config(path: str | Path = "config.yml") -> Config:
         social_topic=str(social.get("topic") or company),
         social_days=int(social.get("days") or 30),
         social_search=str(social.get("search") or ""),
+        social_plan=str(social.get("plan") or ""),
         subreddits=str(social.get("subreddits") or ""),
         evidence_max_chars=int(social.get("evidence_max_chars") or 35000),
         model=str(llm.get("model") or "google/gemini-2.5-flash"),

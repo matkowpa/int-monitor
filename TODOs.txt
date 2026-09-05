@@ -4,4 +4,4 @@ The project has to be pushed to the github and the updates should be published o
 
 
 
--> SCRAPECREATORS_API_KEY
+-> nie napisuj wersji tylko dodawaj

@@ -207,9 +207,10 @@ def main(argv: list[str] | None = None) -> int:
         evidence = ""
         if not args.skip_social:
             engine = collect_social.ensure_engine(config)
+            plan_path = str(ROOT / config.social_plan) if config.social_plan else ""
             evidence = collect_social.run_evidence_pack(
                 config.social_topic, config.social_days, ENGINE_RUN_DIR, engine,
-                config.social_search, config.subreddits,
+                config.social_search, config.subreddits, plan_path,
             )
     if evidence and len(evidence) > config.evidence_max_chars:
         evidence = evidence[: config.evidence_max_chars] + "\n\n[... evidence truncated ...]"
