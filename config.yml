@@ -28,14 +28,17 @@ lookback_hours: 48
 first_run_days: 7
 max_new_items: 40
 
-# Social / alternative source screening (last30days engine, keyless sources).
+# Social / alternative source screening (last30days engine).
 social:
   topic: "Intrum AB"
   days: 30
-  # Keyless sources passed explicitly via --search for reproducible runs.
-  search: "reddit,hackernews,youtube,polymarket,grounding"
-  # Optional: focus Reddit screening on these subreddits (comma-separated).
-  subreddits: "sweden,sverige,europe,investing,eupersonalfinance,Stockholm"
+  # Source whitelist passed via --search. Do NOT add social.subreddits here:
+  # that flag switches Reddit from global full-text search (which finds Intrum
+  # posts anywhere) to listing-scans of a few subs (which find none). grounding
+  # (web) is omitted - it is dead keyless until a BRAVE_API_KEY/SERPER_API_KEY
+  # is configured for the engine. Instagram/TikTok need SCRAPECREATORS_API_KEY
+  # (read from ~/.config/last30days/.env locally, from the repo secret in CI).
+  search: "reddit,tiktok,instagram,youtube,hackernews,polymarket,github"
   # Hard cap on the evidence pack fed to the LLM (characters).
   evidence_max_chars: 35000
 

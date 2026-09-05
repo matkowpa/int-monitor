@@ -19,8 +19,9 @@ GitHub Actions (daily cron 06:30 UTC)
         |
         v
 1. COLLECT     Google News RSS (EN + SV + GlobeNewswire press releases)
-2. EVIDENCE    last30days engine (headless, --emit compact): Reddit, HN,
-               YouTube, StockTwits, Polymarket, web  ->  evidence pack
+2. EVIDENCE    last30days engine (headless, --emit compact): Reddit (global
+               full-text search), TikTok, Instagram, YouTube, HN, Polymarket,
+               GitHub  ->  evidence pack
                (badge + evidence blocks + stats footer)
 3. SYNTHESIZE  OpenRouter LLM -> "What I learned" brief in the /last30days
                skill output format, RSS news integrated with links
@@ -70,8 +71,9 @@ present, otherwise cloned from GitHub into `.last30days/`.
 
 1. Repo: https://github.com/matkowpa/int-monitor (public)
 2. Repo **Settings -> Secrets and variables -> Actions**:
-   add `OPENROUTER_API_KEY` (required). Optionally add `SCRAPECREATORS_API_KEY`
-   to unlock X/Twitter coverage in the engine.
+   add `OPENROUTER_API_KEY` (required). Add `SCRAPECREATORS_API_KEY` to unlock
+   Instagram/TikTok coverage in CI — locally the engine reads it from its own
+   global config (`~/.config/last30days/.env`).
 3. Repo **Settings -> Pages**: Source = *Deploy from a branch*, Branch = `gh-pages`, `/ (root)`.
 4. The workflow runs daily at 06:30 UTC; trigger **Actions -> daily-monitor ->
    Run workflow** for an immediate run.
@@ -81,7 +83,9 @@ present, otherwise cloned from GitHub into `.last30days/`.
 - **Model**: `llm.model` in `config.yml`. Any OpenRouter chat model id works.
 - **Schedule**: `cron` in `.github/workflows/daily.yml`.
 - **Sources**: add/remove RSS entries under `rss_sources`; engine sources under
-  `social.search`.
+  `social.search`. Do **not** set `social.subreddits` — it replaces Reddit's
+  global full-text search (which finds Intrum posts) with listing-scans of a
+  few subreddits (which find none).
 - **Evidence size**: `social.evidence_max_chars` caps what is fed to the LLM.
 - **Engine version**: `last30days.ref` in `config.yml` — pin a tag/commit for
   reproducible CI runs.
@@ -89,6 +93,8 @@ present, otherwise cloned from GitHub into `.last30days/`.
 ## Limitations
 
 - The brief is machine-generated; always verify against the linked sources.
-- Without API keys, social coverage is limited to what keyless endpoints
-  return — quiet results are normal for a company with little social chatter.
+- Without API keys, social coverage is limited to Reddit's global search and
+  whatever the keyless endpoints return — quiet results are normal for a
+  company with little social chatter. Web/grounding needs a `BRAVE_API_KEY` or
+  `SERPER_API_KEY` for the engine; Instagram/TikTok need `SCRAPECREATORS_API_KEY`.
 - Google News links are redirects; RSS dedupe is by title, not final URL.
