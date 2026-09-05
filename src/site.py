@@ -63,8 +63,6 @@ def build_site(reports_dir: Path, out_dir: Path, config) -> Path:
         html = report_tpl.render(
             **base_ctx,
             date=meta["date"],
-            headline=meta.get("headline", ""),
-            sentiment=meta.get("sentiment"),
             report_html=render_markdown(md_text),
         )
         (out_reports / f"{meta['date']}.html").write_text(html, encoding="utf-8")

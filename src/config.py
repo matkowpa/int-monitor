@@ -18,8 +18,9 @@ class Config:
     max_new_items: int
     social_topic: str
     social_days: int
-    social_max_items: int
+    social_search: str
     subreddits: str
+    evidence_max_chars: int
     model: str
     temperature: float
     max_tokens: int
@@ -63,8 +64,9 @@ def load_config(path: str | Path = "config.yml") -> Config:
         max_new_items=int(raw.get("max_new_items") or 40),
         social_topic=str(social.get("topic") or company),
         social_days=int(social.get("days") or 30),
-        social_max_items=int(social.get("max_items") or 30),
+        social_search=str(social.get("search") or ""),
         subreddits=str(social.get("subreddits") or ""),
+        evidence_max_chars=int(social.get("evidence_max_chars") or 35000),
         model=str(llm.get("model") or "google/gemini-2.5-flash"),
         temperature=float(llm.get("temperature") if llm.get("temperature") is not None else 0.2),
         max_tokens=int(llm.get("max_tokens") or 6000),

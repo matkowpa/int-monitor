@@ -1,17 +1,6 @@
 {
   "date": "2026-09-05",
-  "headline": "Intrum AB: No new developments or social activity reported today, maintaining a neutral outlook.",
-  "highlights": [
-    "No new news items reported.",
-    "No social media activity detected.",
-    "No updates on ongoing stories.",
-    "No new threats or risks identified."
-  ],
-  "sentiment": {
-    "score": 0.0,
-    "label": "neutral",
-    "rationale": "No new information, positive or negative, was reported today."
-  },
-  "threats": [],
-  "generated_at": "2026-09-05T13:17:29Z"
+  "generated_at": "2026-09-05T16:40:08Z",
+  "news_count": 0,
+  "evidence_chars": 3372
 }

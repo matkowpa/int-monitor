@@ -28,21 +28,23 @@ lookback_hours: 48
 first_run_days: 7
 max_new_items: 40
 
-# Social / alternative source screening (last30days engine, keyless sources:
-# Reddit, Hacker News, YouTube, StockTwits, web).
+# Social / alternative source screening (last30days engine, keyless sources).
 social:
   topic: "Intrum AB"
   days: 30
-  max_items: 30
+  # Keyless sources passed explicitly via --search for reproducible runs.
+  search: "reddit,hackernews,youtube,polymarket,grounding"
   # Optional: focus Reddit screening on these subreddits (comma-separated).
   subreddits: "sweden,sverige,europe,investing,eupersonalfinance,Stockholm"
+  # Hard cap on the evidence pack fed to the LLM (characters).
+  evidence_max_chars: 35000
 
 # LLM used to write the daily report (OpenRouter API).
 # Any chat-capable model id from https://openrouter.ai/models works here.
 llm:
-  model: "google/gemini-2.5-flash"
+  model: "z-ai/glm-5.3"
   temperature: 0.2
-  max_tokens: 6000
+  max_tokens: 8000
   api_key_env: "OPENROUTER_API_KEY"
 
 # last30days engine source (cloned at runtime into .last30days/ when no local
@@ -55,5 +57,5 @@ last30days:
 # (prefix for css/report links).
 site:
   title: "Intrum AB Daily Monitor"
-  description: "Automated daily intelligence on Intrum AB: news, social sentiment and threat screening."
+  description: "A daily /last30days research brief on Intrum AB: what the internet said, day by day."
   base_url: "https://matkowpa.github.io/int-monitor/"
