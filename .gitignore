@@ -14,6 +14,9 @@ venv/
 # site build output (pushed to gh-pages branch by CI, not committed to main)
 site/
 
+# last30days raw engine outputs copied into reports/ for reference
+reports/intrum-*
+
 # secrets / local env
 .env
 
