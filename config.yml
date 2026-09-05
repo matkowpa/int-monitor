@@ -1,0 +1,60 @@
+# Intrum AB Daily Monitor — configuration
+# Everything the daily pipeline needs to run. Edit freely; no code changes required.
+
+company: "Intrum AB"
+report_language: "en"
+
+# A news item is considered relevant when any of these terms (case-insensitive)
+# appears in its title or snippet.
+topic_terms:
+  - "Intrum"
+  - "Intrum AB"
+  - "Intrum Justitia"
+  - "INTRUM"
+
+# RSS/Atom feeds polled every run. Per-feed failures only produce a warning.
+# always_relevant: true -> skip the topic_terms filter (for company-owned feeds).
+rss_sources:
+  - name: "Google News (EN)"
+    url: "https://news.google.com/rss/search?q=Intrum&hl=en-US&gl=US&ceid=US:en"
+  - name: "Google News (SV)"
+    url: "https://news.google.com/rss/search?q=Intrum&hl=sv-SE&gl=SE&ceid=SE:sv"
+  - name: "Intrum press releases (GlobeNewswire via Google News)"
+    url: "https://news.google.com/rss/search?q=Intrum+site:globenewswire.com&hl=en-US&gl=US&ceid=US:en"
+
+# "New since last publish" window. Items older than this are ignored
+# (unless this is the very first run, which uses first_run_days).
+lookback_hours: 48
+first_run_days: 7
+max_new_items: 40
+
+# Social / alternative source screening (last30days engine, keyless sources:
+# Reddit, Hacker News, YouTube, StockTwits, web).
+social:
+  topic: "Intrum AB"
+  days: 30
+  max_items: 30
+  # Optional: focus Reddit screening on these subreddits (comma-separated).
+  subreddits: "sweden,sverige,europe,investing,eupersonalfinance,Stockholm"
+
+# LLM used to write the daily report (OpenRouter API).
+# Any chat-capable model id from https://openrouter.ai/models works here.
+llm:
+  model: "google/gemini-2.5-flash"
+  temperature: 0.2
+  max_tokens: 6000
+  api_key_env: "OPENROUTER_API_KEY"
+
+# last30days engine source (cloned at runtime into .last30days/ when no local
+# copy exists). Pin a git tag/commit hash for reproducible CI runs.
+last30days:
+  repo: "https://github.com/mvanhorn/last30days-skill"
+  ref: "main"
+
+# Static site metadata. base_url MUST be set to the GitHub Pages project URL
+# after the first publish, e.g. "https://YOURUSER.github.io/int-monitor/"
+# (used as a prefix for css/report links).
+site:
+  title: "Intrum AB Daily Monitor"
+  description: "Automated daily intelligence on Intrum AB: news, social sentiment and threat screening."
+  base_url: ""

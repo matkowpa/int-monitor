@@ -1,0 +1,26 @@
+[
+  {
+    "id": "fixture-1",
+    "title": "Intrum strengthens financial position in second quarter with successful capital raise",
+    "url": "https://www.example.com/intrum-capital-raise",
+    "source": "Test Feed",
+    "published": "2026-09-04T08:00:00Z",
+    "snippet": "Intrum AB completed a capital raise strengthening its balance sheet, the company said in a press release. The move resets leverage and supports the turnaround plan."
+  },
+  {
+    "id": "fixture-2",
+    "title": "Intrum Justitia AB (0H9P) Receives a Buy from UBS",
+    "url": "https://www.example.com/ubs-buy",
+    "source": "Test Feed",
+    "published": "2026-09-03T08:36:00Z",
+    "snippet": "UBS analysts reiterated a Buy rating on Intrum Justitia AB, citing improving cash collection performance and a more conservative portfolio strategy."
+  },
+  {
+    "id": "fixture-3",
+    "title": "Intrum expected to report SEK 1,169m in adjusted operating profit, consensus",
+    "url": "https://www.example.com/consensus",
+    "source": "Test Feed",
+    "published": "2026-09-02T10:52:26Z",
+    "snippet": "Market consensus expects Intrum to report SEK 1,169 million in adjusted operating profit for the upcoming quarterly report."
+  }
+]

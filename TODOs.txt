@@ -1,0 +1,3 @@
+I want to have a periodic daily analysis of different online sources to get the information on anything which is related to company Intrum AB. The infromation should be published daily, with links to the sources together with the  summary of the topics. The daily focus should be on the new info which appeared since teh last publishing, but the important stories should be continued with the updates. 
+On top of the obvious economic and market related news and I want to have a screeening of the social media and alternative sources done by last30days skill. I want to know  the potential treats to the company and senstimenst towards it.
+The project has to be pushed to the github and the updates should be published on the web page.

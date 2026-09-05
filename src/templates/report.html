@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ date }} — {{ headline }} — {{ site_title }}{% endblock %}
+{% block content %}
+<section class="report-card">
+  <p class="backlink"><a href="{{ base }}index.html">&larr; Latest report</a></p>
+  <div class="report-head">
+    <span class="report-date">{{ date }}</span>
+    {% if sentiment %}
+    <span class="badge badge-{{ sentiment.label }}">{{ sentiment.label }}</span>
+    <span class="score">{{ '%+.2f'|format(sentiment.score) }}</span>
+    {% endif %}
+  </div>
+  <h1 class="headline">{{ headline }}</h1>
+  <div class="report-body">{{ report_html | safe }}</div>
+</section>
+{% endblock %}
