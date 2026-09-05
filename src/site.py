@@ -99,5 +99,10 @@ def build_site(reports_dir: Path, out_dir: Path, config) -> Path:
     if static_src.exists():
         shutil.copytree(static_src, out_dir / "static", dirs_exist_ok=True)
 
+    # Skip Jekyll processing on the Pages side entirely: the site is plain
+    # pre-built HTML, and a stray Jekyll build (e.g. after a Pages misconfig)
+    # would only add failure modes.
+    (out_dir / ".nojekyll").touch()
+
     log.info("Site built: %d report page(s) -> %s", len(metas), out_dir.resolve())
     return out_dir
