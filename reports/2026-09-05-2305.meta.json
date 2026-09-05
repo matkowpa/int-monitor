@@ -1,7 +1,8 @@
 {
   "date": "2026-09-05",
   "run_id": "2026-09-05-2305",
-  "generated_at": "2026-09-05T23:07:07Z",
+  "generated_at": "2026-09-05T23:05:00Z",
   "news_count": 0,
-  "evidence_chars": 12117
+  "evidence_chars": 0,
+  "recovered": true
 }

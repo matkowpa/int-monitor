@@ -267,6 +267,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.push:
         git_commit_state(report_date)
         if publish_site_ghpages(SITE_DIR, run_id):
+            page_url = f"{config.base_url}reports/{run_id}.html"
+            notify_mod.wait_for_page(page_url, run_id)
             notify_mod.notify_publish(config, run_id, len(new_items), len(evidence))
 
     log.info("Done: %d new item(s), evidence %d chars -> %s",

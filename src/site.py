@@ -48,7 +48,12 @@ def load_report_metas(reports_dir: Path) -> list[dict]:
             data["label"] = run_id
         data["md_path"] = md_path
         metas.append(data)
-    metas.sort(key=lambda m: m["run_id"], reverse=True)
+    # Sort by actual run time (generated_at, UTC), not run_id: run ids are
+    # date-based and can cross the local/UTC midnight boundary (e.g.
+    # `2026-09-06` created before `2026-09-05-2305`), so the string order of
+    # run ids is not always chronological.
+    metas.sort(key=lambda m: (str(m.get("generated_at") or ""), m["run_id"]),
+               reverse=True)
     return metas
 
 
