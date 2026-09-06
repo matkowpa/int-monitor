@@ -3,7 +3,7 @@
 **Live site: https://matkowpa.github.io/int-monitor/**
 
 A day-by-day archive of **/last30days research briefs on Intrum AB**, published
-every morning to a static website served by **GitHub Pages**. Every daily page
+three mornings a week to a static website served by **GitHub Pages**. Every daily page
 is the result of one automated run of the [last30days](https://github.com/mvanhorn/last30days-skill)
 skill: the engine collects what people actually say across Reddit, Hacker News,
 YouTube, StockTwits, Polymarket and the web, and an LLM (via OpenRouter) writes
@@ -15,7 +15,7 @@ are woven directly into the same narrative.
 ## How it works
 
 ```
-GitHub Actions (daily 08:30 + 15:30 Warsaw time)
+GitHub Actions (Mon/Wed/Fri 08:30 Warsaw time)
         |
         v
 1. COLLECT     Google News RSS (EN + SV + GlobeNewswire press releases)
@@ -80,8 +80,8 @@ present, otherwise cloned from GitHub into `.last30days/`.
    from its own global config (`~/.config/last30days/.env`). Optionally add
    `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` for notifications (see below).
 3. Repo **Settings -> Pages**: Source = *Deploy from a branch*, Branch = `gh-pages`, `/ (root)`.
-4. The workflow runs twice daily at 08:30 and 15:30 **Warsaw time** (the
-   month-split crons keep the times across DST changes); trigger
+4. The workflow runs three times a week — Mon/Wed/Fri at 08:30 **Warsaw
+   time** (the month-split crons keep the time across DST changes); trigger
    **Actions -> daily-monitor -> Run workflow** for an immediate run.
    Repeated runs the same day never overwrite each other — each run gets
    its own archive page (`YYYY-MM-DD-HHMM`).

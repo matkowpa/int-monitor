@@ -7,12 +7,12 @@ on:
     # (UTC+2), winter ~= Nov-Feb (UTC+1); off by a few days around the DST
     # switch weekends. NOTE: GitHub's cron rejects wrapping ranges, so the
     # winter months are written as the list 1,2,11,12 (not 11-2).
+    # Runs Mon/Wed/Fri only (cron day-of-week 1,3,5). Months live in the
+    # MONTH field, not day-of-month (3-10 in the DOM field would mean the
+    # 3rd-10th day of every month, regardless of season).
     #   08:30 PL = 06:30 UTC (CEST) / 07:30 UTC (CET)
-    #   15:30 PL = 13:30 UTC (CEST) / 14:30 UTC (CET)
-    - cron: "30 6 3-10 * *"       # 08:30 PL, Mar-Oct (CEST)
-    - cron: "30 13 3-10 * *"      # 15:30 PL, Mar-Oct (CEST)
-    - cron: "30 7 1,2,11,12 * *"  # 08:30 PL, Nov-Feb (CET)
-    - cron: "30 14 1,2,11,12 * *" # 15:30 PL, Nov-Feb (CET)
+    - cron: "30 6 * 3-10 1,3,5"      # 08:30 PL, Mon/Wed/Fri, Mar-Oct (CEST)
+    - cron: "30 7 * 1,2,11,12 1,3,5" # 08:30 PL, Mon/Wed/Fri, Nov-Feb (CET)
   workflow_dispatch:
 
 permissions:
