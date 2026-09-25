@@ -24,6 +24,15 @@ rss_sources:
   - name: "Intrum press releases (GlobeNewswire via Google News)"
     url: "https://news.google.com/rss/search?q=Intrum+site:globenewswire.com&hl=en-US&gl=US&ceid=US:en"
 
+# Agent Reach (semantic news search via Exa MCP router).
+# Complements RSS feeds with direct semantic web search.
+agent_reach:
+  enabled: true
+  queries:
+    - "Intrum AB corporate financial news and credit management announcements"
+    - "Intrum debt servicing market updates and ratings"
+  results_per_query: 6
+
 # "New since last publish" window. Items older than this are ignored
 # (unless this is the very first run, which uses first_run_days).
 lookback_hours: 48
@@ -71,3 +80,4 @@ site:
   title: "Intrum Daily Monitor"
   description: "A daily research brief on Intrum AB: what the internet said, day by day."
   base_url: "https://matkowpa.github.io/int-monitor/"
+

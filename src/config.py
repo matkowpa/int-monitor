@@ -13,6 +13,9 @@ class Config:
     report_language: str
     topic_terms: list[str]
     rss_sources: list[dict]
+    agent_reach_enabled: bool
+    agent_reach_queries: list[str]
+    agent_reach_results_per_query: int
     lookback_hours: int
     first_run_days: int
     max_new_items: int
@@ -42,6 +45,7 @@ def load_config(path: str | Path = "config.yml") -> Config:
     llm = raw.get("llm") or {}
     social = raw.get("social") or {}
     l30 = raw.get("last30days") or {}
+    reach = raw.get("agent_reach") or {}
     site = raw.get("site") or {}
 
     company = str(raw.get("company") or "").strip()
@@ -60,6 +64,9 @@ def load_config(path: str | Path = "config.yml") -> Config:
         report_language=str(raw.get("report_language") or "en"),
         topic_terms=topic_terms,
         rss_sources=rss_sources,
+        agent_reach_enabled=bool(reach.get("enabled", True)),
+        agent_reach_queries=[str(q).strip() for q in (reach.get("queries") or []) if str(q).strip()],
+        agent_reach_results_per_query=int(reach.get("results_per_query") or 6),
         lookback_hours=int(raw.get("lookback_hours") or 48),
         first_run_days=int(raw.get("first_run_days") or 7),
         max_new_items=int(raw.get("max_new_items") or 40),

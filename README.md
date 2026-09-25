@@ -19,12 +19,13 @@ GitHub Actions (Mon/Wed/Fri 08:30 Warsaw time)
         |
         v
 1. COLLECT     Google News RSS (EN + SV + GlobeNewswire press releases)
+               + agent-reach semantic news search (Exa MCP)
 2. EVIDENCE    last30days engine (headless, --emit compact): Reddit (global
                full-text search), TikTok, Instagram, YouTube, HN, Polymarket,
                GitHub  ->  evidence pack
                (badge + evidence blocks + stats footer)
 3. SYNTHESIZE  OpenRouter LLM -> "What I learned" brief in the /last30days
-               skill output format, RSS news integrated with links
+               skill output format, news integrated with links
 4. PUBLISH     reports/*.md + data/state committed to main,
                static site pushed to gh-pages -> GitHub Pages
                (day-by-day archive; gh-pages is mirrored to the new build)
@@ -38,16 +39,17 @@ GitHub Actions (Mon/Wed/Fri 08:30 Warsaw time)
   if the LLM misbehaves.
 - **Never-breaks design**: a failed feed, empty social screening or LLM outage
   still publishes a (fallback) brief for the day — raw evidence + news list.
-- **RSS dedupe**: `data/state.json` stores seen item ids, so the synthesis
-  focuses on what appeared since the previous run.
+- **News dedupe**: `data/state.json` stores seen item ids across RSS and agent-reach,
+  so the synthesis focuses on what appeared since the previous run.
 
 ## Repository layout
 
 | Path | Purpose |
 | --- | --- |
-| `config.yml` | All tuning: feeds, terms, sources, model, subreddits, site metadata |
+| `config.yml` | All tuning: feeds, terms, agent-reach queries, sources, model, site metadata |
+| `config/mcporter.json` | MCP configuration for agent-reach (Exa MCP endpoint) |
 | `engine-plan.json` | Fixed last30days query plan (deterministic subqueries: community, corporate, transactions) |
-| `src/` | Pipeline code (collect_news, collect_social, synthesize, site, run) |
+| `src/` | Pipeline code (collect_news, collect_agent_reach, collect_social, synthesize, site, run) |
 | `reports/` | Generated daily briefs (`YYYY-MM-DD.md` + `.meta.json`) |
 | `data/` | Persisted state (seen RSS ids) |
 | `site/` | Build output (pushed to `gh-pages` by CI, not committed to `main`) |
@@ -88,6 +90,7 @@ present, otherwise cloned from GitHub into `.last30days/`.
 
 ## Configuration notes
 
+- **Agent Reach**: `agent_reach.enabled`, `agent_reach.queries`, `agent_reach.results_per_query` in `config.yml`. Uses Exa MCP via `mcporter` defined in `config/mcporter.json` (no API key required).
 - **Model**: `llm.model` in `config.yml`. Any OpenRouter chat model id works.
 - **Schedule**: `cron` in `.github/workflows/daily.yml`.
 - **Sources**: add/remove RSS entries under `rss_sources`; engine sources under

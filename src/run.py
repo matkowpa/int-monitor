@@ -18,6 +18,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from . import collect_news, collect_social, notify as notify_mod
+from . import collect_agent_reach
 from . import site as site_mod
 from . import synthesize as synth_mod
 from .config import load_config
@@ -226,6 +227,18 @@ def main(argv: list[str] | None = None) -> int:
         new_items, evidence = _mock_inputs()
     else:
         new_items, state = collect_news.collect_new_items(config, state)
+        if getattr(config, "agent_reach_enabled", True):
+            reach_items = collect_agent_reach.collect_agent_reach_news(config)
+            # Dedupe agent_reach items against seen_ids and current run's new_items
+            existing_ids = set(state.seen_ids) | {it.id for it in new_items}
+            new_reach = [it for it in reach_items if it.id not in existing_ids]
+            if new_reach:
+                log.info("Agent reach contributed %d new items", len(new_reach))
+                new_items.extend(new_reach)
+                # Keep items under max_new_items limit if needed
+                seen = set(state.seen_ids)
+                seen.update(it.id for it in new_reach)
+                state.seen_ids = list(seen)[-collect_news.SEEN_IDS_CAP:]
         evidence = ""
         if not args.skip_social:
             engine = collect_social.ensure_engine(config)
