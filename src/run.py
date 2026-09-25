@@ -241,6 +241,12 @@ def _write_report(run_id: str, report_date: str, brief_md: str,
     )
 
 
+def _most_recent(items: list[NewsItem]) -> list[NewsItem]:
+    """Return items newest-first (undated items sort last)."""
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    return sorted(items, key=lambda x: x.published or epoch, reverse=True)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="int-monitor", description=__doc__)
     parser.add_argument("--date", help="report date (YYYY-MM-DD); default: today (UTC)")
@@ -279,17 +285,20 @@ def main(argv: list[str] | None = None) -> int:
     else:
         new_items, state = collect_news.collect_new_items(config, state)
         rss_items = list(new_items)
-        reach_items = collect_agent_reach.collect_agent_reach_news(config)
+        reach_results = collect_agent_reach.collect_agent_reach_news(config)
         # Dedupe agent_reach items against seen_ids and current run's new_items
         existing_ids = set(state.seen_ids) | {it.id for it in new_items}
-        new_reach = [it for it in reach_items if it.id not in existing_ids]
+        new_reach = [it for it in reach_results if it.id not in existing_ids]
         if new_reach:
             log.info("Agent reach contributed %d new items", len(new_reach))
             new_items.extend(new_reach)
             seen = set(state.seen_ids)
             seen.update(it.id for it in new_reach)
             state.seen_ids = list(seen)[-collect_news.SEEN_IDS_CAP:]
-        reach_items = new_reach
+
+        # The agent-reach brief is built from new items, but on a quiet day it
+        # falls back to the most recent search results so it is never empty.
+        reach_items = new_reach or _most_recent(reach_results)
 
         if "last30days" in engines and not args.skip_social:
             engine = collect_social.ensure_engine(config)

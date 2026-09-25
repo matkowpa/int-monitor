@@ -2,6 +2,7 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -36,6 +37,15 @@ class TestRunIds(unittest.TestCase):
                     (Path(tmp) / "2099-01-01.meta.json").read_text(encoding="utf-8")
                 )
                 self.assertNotIn("engine", meta2)
+
+    def test_most_recent(self):
+        old = run.NewsItem(id="1", title="old", url="u1", source="s",
+                           published=datetime(2026, 1, 1, tzinfo=timezone.utc))
+        new = run.NewsItem(id="2", title="new", url="u2", source="s",
+                           published=datetime(2026, 9, 1, tzinfo=timezone.utc))
+        undated = run.NewsItem(id="3", title="undated", url="u3", source="s")
+        ordered = run._most_recent([undated, old, new])
+        self.assertEqual([x.id for x in ordered], ["2", "1", "3"])
 
 
 if __name__ == "__main__":
