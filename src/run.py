@@ -213,6 +213,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="use tests/fixtures instead of live collection (no source network)")
     parser.add_argument("--push", action="store_true",
                         help="commit reports/data to the current branch and publish site to gh-pages")
+    parser.add_argument("--engine", choices=["last30days", "agent-reach"],
+                        help="evidence engine driving the brief (overrides config.yml 'engine')")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -221,37 +223,53 @@ def main(argv: list[str] | None = None) -> int:
     report_date = args.date or date.today().isoformat()
     run_id = _next_run_id(report_date)
 
+    # 0. Engine selection: which evidence source drives the brief.
+    engine_name = (args.engine or getattr(config, "engine", "last30days")).strip().lower()
+    if engine_name not in ("last30days", "agent-reach"):
+        log.warning("Unknown engine '%s' - falling back to last30days", engine_name)
+        engine_name = "last30days"
+
     # 1. Collect
     state = _load_state()
+    rss_items: list[NewsItem] = []
+    reach_items: list[NewsItem] = []
+    evidence = ""
     if args.mock:
         new_items, evidence = _mock_inputs()
+        if engine_name == "agent-reach":
+            reach_items = list(new_items)
     else:
         new_items, state = collect_news.collect_new_items(config, state)
-        if getattr(config, "agent_reach_enabled", True):
-            reach_items = collect_agent_reach.collect_agent_reach_news(config)
-            # Dedupe agent_reach items against seen_ids and current run's new_items
-            existing_ids = set(state.seen_ids) | {it.id for it in new_items}
-            new_reach = [it for it in reach_items if it.id not in existing_ids]
-            if new_reach:
-                log.info("Agent reach contributed %d new items", len(new_reach))
-                new_items.extend(new_reach)
-                # Keep items under max_new_items limit if needed
-                seen = set(state.seen_ids)
-                seen.update(it.id for it in new_reach)
-                state.seen_ids = list(seen)[-collect_news.SEEN_IDS_CAP:]
-        evidence = ""
-        if not args.skip_social:
-            engine = collect_social.ensure_engine(config)
-            plan_path = str(ROOT / config.social_plan) if config.social_plan else ""
-            evidence = collect_social.run_evidence_pack(
-                config.social_topic, config.social_days, ENGINE_RUN_DIR, engine,
-                config.social_search, config.subreddits, plan_path,
-            )
+        rss_items = list(new_items)
+        reach_items = collect_agent_reach.collect_agent_reach_news(config)
+        # Dedupe agent_reach items against seen_ids and current run's new_items
+        existing_ids = set(state.seen_ids) | {it.id for it in new_items}
+        new_reach = [it for it in reach_items if it.id not in existing_ids]
+        if new_reach:
+            log.info("Agent reach contributed %d new items", len(new_reach))
+            new_items.extend(new_reach)
+            seen = set(state.seen_ids)
+            seen.update(it.id for it in new_reach)
+            state.seen_ids = list(seen)[-collect_news.SEEN_IDS_CAP:]
+        reach_items = new_reach
+
+        if engine_name == "last30days":
+            evidence = ""
+            if not args.skip_social:
+                engine = collect_social.ensure_engine(config)
+                plan_path = str(ROOT / config.social_plan) if config.social_plan else ""
+                evidence = collect_social.run_evidence_pack(
+                    config.social_topic, config.social_days, ENGINE_RUN_DIR, engine,
+                    config.social_search, config.subreddits, plan_path,
+                )
     if evidence and len(evidence) > config.evidence_max_chars:
         evidence = evidence[: config.evidence_max_chars] + "\n\n[... evidence truncated ...]"
 
     # 2. Synthesize (the badge line is handled programmatically)
-    brief_md = synth_mod.synthesize(config, evidence, new_items)
+    if engine_name == "agent-reach":
+        brief_md = synth_mod.synthesize_agent_reach(config, reach_items, rss_items)
+    else:
+        brief_md = synth_mod.synthesize(config, evidence, new_items)
 
     # 3. Write report artifacts (never overwrite: run_id is unique per run)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)

@@ -4,6 +4,11 @@
 company: "Intrum AB"
 report_language: "en"
 
+# Evidence engine driving the daily brief:
+#   last30days  -> social/web screening engine (Reddit, YouTube, HN, etc.) — default
+#   agent-reach -> semantic web search via Exa MCP (second engine version)
+engine: "last30days"
+
 # A news item is considered relevant when any of these terms (case-insensitive)
 # appears in its title or snippet.
 topic_terms:

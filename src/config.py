@@ -11,6 +11,7 @@ import yaml
 class Config:
     company: str
     report_language: str
+    engine: str
     topic_terms: list[str]
     rss_sources: list[dict]
     agent_reach_enabled: bool
@@ -49,6 +50,9 @@ def load_config(path: str | Path = "config.yml") -> Config:
     site = raw.get("site") or {}
 
     company = str(raw.get("company") or "").strip()
+    engine = str(raw.get("engine") or "last30days").strip().lower()
+    if engine not in ("last30days", "agent-reach"):
+        engine = "last30days"
     topic_terms = [str(t).strip() for t in (raw.get("topic_terms") or []) if str(t).strip()]
     rss_sources = list(raw.get("rss_sources") or [])
     if not company or not topic_terms or not rss_sources:
@@ -62,6 +66,7 @@ def load_config(path: str | Path = "config.yml") -> Config:
     return Config(
         company=company,
         report_language=str(raw.get("report_language") or "en"),
+        engine=engine,
         topic_terms=topic_terms,
         rss_sources=rss_sources,
         agent_reach_enabled=bool(reach.get("enabled", True)),

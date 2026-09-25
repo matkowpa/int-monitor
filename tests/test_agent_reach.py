@@ -7,6 +7,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src import collect_agent_reach
+from src import synthesize as synth_mod
 from src.config import Config, load_config
 from src.models import NewsItem
 
@@ -86,6 +87,24 @@ class TestCollectAgentReach(unittest.TestCase):
 
         items = collect_agent_reach.collect_agent_reach_news(cfg, search_fn=mock_search)
         self.assertEqual(len(items), 2)
+
+
+    def test_build_messages_agent_reach(self):
+        cfg = mock.MagicMock()
+        cfg.company = "Intrum AB"
+        cfg.report_language = "en"
+        items = collect_agent_reach.parse_results(EXA_TEXT_SAMPLE)
+        msgs = synth_mod.build_messages_agent_reach(cfg, items, [])
+        self.assertIn("agent-reach", msgs[0]["content"])
+        self.assertIn("Agent Reach search results", msgs[1]["content"])
+        self.assertIn(items[0].url, msgs[1]["content"])
+
+    def test_synthesize_agent_reach_fallback_no_key(self):
+        cfg = mock.MagicMock()
+        cfg.api_key_env = "NO_SUCH_INT_MONITOR_KEY"
+        out = synth_mod.synthesize_agent_reach(cfg, [], [])
+        self.assertIn("What I learned:", out)
+        self.assertIn("NO_SUCH_INT_MONITOR_KEY not set", out)
 
 
 if __name__ == "__main__":
