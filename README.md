@@ -68,6 +68,11 @@ python -m src.run --dry-run
 
 # full run incl. committing reports/data and publishing the site (CI only)
 python -m src.run --push
+
+# choose the evidence engine driving the brief (default: config.yml `engine`)
+python -m src.run --engine last30days   # social/web screening engine
+python -m src.run --engine agent-reach  # semantic web search via Exa MCP
+python -m src.run --engine both         # both engines -> two briefs per run
 ```
 
 The last30days engine is acquired automatically: local Cline skill copy if
@@ -91,6 +96,7 @@ present, otherwise cloned from GitHub into `.last30days/`.
 ## Configuration notes
 
 - **Agent Reach**: `agent_reach.enabled`, `agent_reach.queries`, `agent_reach.results_per_query` in `config.yml`. Uses Exa MCP via `mcporter` defined in `config/mcporter.json` (no API key required).
+- **Engine**: `engine` in `config.yml` (`last30days`, `agent-reach`, or `both`); overridable per run with `--engine`. `both` publishes two briefs per run (suffixed `-last30days` / `-agent-reach`) so the archive shows each lens daily.
 - **Model**: `llm.model` in `config.yml`. Any OpenRouter chat model id works.
 - **Schedule**: `cron` in `.github/workflows/daily.yml`.
 - **Sources**: add/remove RSS entries under `rss_sources`; engine sources under

@@ -1,7 +1,7 @@
 """Pipeline orchestrator for the Intrum AB daily monitor.
 
 Usage:
-  python -m src.run [--date YYYY-MM-DD] [--dry-run] [--skip-social] [--mock] [--push]
+  python -m src.run [--date YYYY-MM-DD] [--dry-run] [--skip-social] [--mock] [--push] [--engine {last30days,agent-reach,both}]
 """
 from __future__ import annotations
 
@@ -202,6 +202,45 @@ def _next_run_id(base: str) -> str:
     return run_id
 
 
+def _next_run_ids(report_date: str, engines: list[str]) -> dict[str, str]:
+    """Assign a unique run_id per engine.
+
+    Single engine keeps the existing scheme (plain date, or date-HHMM on later
+    runs). Multiple engines share one HHMM batch and are suffixed per engine so
+    both daily briefs coexist in the archive.
+    """
+    if len(engines) == 1:
+        return {engines[0]: _next_run_id(report_date)}
+
+    stamp = datetime.now(timezone.utc).strftime("%H%M")
+    batch = f"{report_date}-{stamp}"
+    n = 1
+    while True:
+        ids = {e: f"{batch}-{e}" for e in engines}
+        if not any((REPORTS_DIR / f"{rid}.md").exists() for rid in ids.values()):
+            return ids
+        n += 1
+        batch = f"{report_date}-{stamp}-{n}"
+
+
+def _write_report(run_id: str, report_date: str, brief_md: str,
+                  news_count: int, evidence_chars: int,
+                  engine: str | None = None) -> None:
+    (REPORTS_DIR / f"{run_id}.md").write_text(brief_md + "\n", encoding="utf-8")
+    meta = {
+        "date": report_date,
+        "run_id": run_id,
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "news_count": news_count,
+        "evidence_chars": evidence_chars,
+    }
+    if engine:
+        meta["engine"] = engine
+    (REPORTS_DIR / f"{run_id}.meta.json").write_text(
+        json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="int-monitor", description=__doc__)
     parser.add_argument("--date", help="report date (YYYY-MM-DD); default: today (UTC)")
@@ -213,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
                         help="use tests/fixtures instead of live collection (no source network)")
     parser.add_argument("--push", action="store_true",
                         help="commit reports/data to the current branch and publish site to gh-pages")
-    parser.add_argument("--engine", choices=["last30days", "agent-reach"],
+    parser.add_argument("--engine", choices=["last30days", "agent-reach", "both"],
                         help="evidence engine driving the brief (overrides config.yml 'engine')")
     args = parser.parse_args(argv)
 
@@ -221,23 +260,22 @@ def main(argv: list[str] | None = None) -> int:
 
     config = load_config(ROOT / "config.yml")
     report_date = args.date or date.today().isoformat()
-    run_id = _next_run_id(report_date)
 
     # 0. Engine selection: which evidence source drives the brief.
-    engine_name = (args.engine or getattr(config, "engine", "last30days")).strip().lower()
-    if engine_name not in ("last30days", "agent-reach"):
-        log.warning("Unknown engine '%s' - falling back to last30days", engine_name)
-        engine_name = "last30days"
+    engine_arg = (args.engine or getattr(config, "engine", "last30days")).strip().lower()
+    if engine_arg not in ("last30days", "agent-reach", "both"):
+        log.warning("Unknown engine '%s' - falling back to last30days", engine_arg)
+        engine_arg = "last30days"
+    engines = ["last30days", "agent-reach"] if engine_arg == "both" else [engine_arg]
 
-    # 1. Collect
+    # 1. Collect (shared by both engines)
     state = _load_state()
     rss_items: list[NewsItem] = []
     reach_items: list[NewsItem] = []
     evidence = ""
     if args.mock:
         new_items, evidence = _mock_inputs()
-        if engine_name == "agent-reach":
-            reach_items = list(new_items)
+        reach_items = list(new_items)
     else:
         new_items, state = collect_news.collect_new_items(config, state)
         rss_items = list(new_items)
@@ -253,57 +291,51 @@ def main(argv: list[str] | None = None) -> int:
             state.seen_ids = list(seen)[-collect_news.SEEN_IDS_CAP:]
         reach_items = new_reach
 
-        if engine_name == "last30days":
-            evidence = ""
-            if not args.skip_social:
-                engine = collect_social.ensure_engine(config)
-                plan_path = str(ROOT / config.social_plan) if config.social_plan else ""
-                evidence = collect_social.run_evidence_pack(
-                    config.social_topic, config.social_days, ENGINE_RUN_DIR, engine,
-                    config.social_search, config.subreddits, plan_path,
-                )
+        if "last30days" in engines and not args.skip_social:
+            engine = collect_social.ensure_engine(config)
+            plan_path = str(ROOT / config.social_plan) if config.social_plan else ""
+            evidence = collect_social.run_evidence_pack(
+                config.social_topic, config.social_days, ENGINE_RUN_DIR, engine,
+                config.social_search, config.subreddits, plan_path,
+            )
     if evidence and len(evidence) > config.evidence_max_chars:
         evidence = evidence[: config.evidence_max_chars] + "\n\n[... evidence truncated ...]"
 
-    # 2. Synthesize (the badge line is handled programmatically)
-    if engine_name == "agent-reach":
-        brief_md = synth_mod.synthesize_agent_reach(config, reach_items, rss_items)
-    else:
-        brief_md = synth_mod.synthesize(config, evidence, new_items)
-
-    # 3. Write report artifacts (never overwrite: run_id is unique per run)
+    # 2. Synthesize + write one report per engine
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    (REPORTS_DIR / f"{run_id}.md").write_text(brief_md + "\n", encoding="utf-8")
-    meta = {
-        "date": report_date,
-        "run_id": run_id,
-        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "news_count": len(new_items),
-        "evidence_chars": len(evidence),
-    }
-    (REPORTS_DIR / f"{run_id}.meta.json").write_text(
-        json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
+    run_ids = _next_run_ids(report_date, engines)
+    for engine_name in engines:
+        if engine_name == "agent-reach":
+            brief_md = synth_mod.synthesize_agent_reach(config, reach_items, rss_items)
+            evidence_chars = 0
+        else:
+            brief_md = synth_mod.synthesize(config, evidence, new_items)
+            evidence_chars = len(evidence)
+        engine_tag = engine_name if engine_arg == "both" else None
+        _write_report(run_ids[engine_name], report_date, brief_md,
+                      len(new_items), evidence_chars, engine_tag)
 
-    # 4. Persist state
+    # 3. Persist state
     if not args.dry_run:
         _save_json(STATE_PATH, state.to_dict())
     else:
         log.info("Dry run: state file left untouched")
 
-    # 5. Build site
+    # 4. Build site
     site_mod.build_site(REPORTS_DIR, SITE_DIR, config)
 
-    # 6. Publish
+    # 5. Publish
     if args.push:
         git_commit_state(report_date)
-        if publish_site_ghpages(SITE_DIR, run_id):
-            page_url = f"{config.base_url}reports/{run_id}.html"
-            notify_mod.wait_for_page(page_url, run_id)
-            notify_mod.notify_publish(config, run_id, len(new_items), len(evidence))
+        if publish_site_ghpages(SITE_DIR, report_date):
+            for engine_name, rid in run_ids.items():
+                page_url = f"{config.base_url}reports/{rid}.html"
+                notify_mod.wait_for_page(page_url, rid)
+                notify_mod.notify_publish(config, rid, len(new_items),
+                                          0 if engine_name == "agent-reach" else len(evidence))
 
-    log.info("Done: %d new item(s), evidence %d chars -> %s",
-             len(new_items), len(evidence), (REPORTS_DIR / f"{run_id}.md").name)
+    log.info("Done: %d new item(s), %d engine(s), evidence %d chars -> %s",
+             len(new_items), len(engines), len(evidence), ", ".join(run_ids.values()))
     return 0
 
 

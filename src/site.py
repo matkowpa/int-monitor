@@ -40,7 +40,13 @@ def load_report_metas(reports_dir: Path) -> list[dict]:
             continue
         data["date"] = date
         data["run_id"] = run_id
-        if run_id == date:
+        engine = str(data.get("engine") or "").strip()
+        if engine:
+            if len(run_id) >= 15 and run_id[10] == "-":
+                data["label"] = f"{date} · {run_id[11:13]}:{run_id[13:15]} UTC · {engine}"
+            else:
+                data["label"] = f"{date} · {engine}"
+        elif run_id == date:
             data["label"] = date
         elif len(run_id) >= 15 and run_id[10] == "-":
             data["label"] = f"{date} · {run_id[11:13]}:{run_id[13:15]} UTC"

@@ -51,7 +51,7 @@ def load_config(path: str | Path = "config.yml") -> Config:
 
     company = str(raw.get("company") or "").strip()
     engine = str(raw.get("engine") or "last30days").strip().lower()
-    if engine not in ("last30days", "agent-reach"):
+    if engine not in ("last30days", "agent-reach", "both"):
         engine = "last30days"
     topic_terms = [str(t).strip() for t in (raw.get("topic_terms") or []) if str(t).strip()]
     rss_sources = list(raw.get("rss_sources") or [])
