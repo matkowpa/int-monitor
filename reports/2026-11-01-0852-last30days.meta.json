@@ -1,0 +1,8 @@
+{
+  "date": "2026-11-01",
+  "run_id": "2026-11-01-0852-last30days",
+  "generated_at": "2026-11-01T08:52:49Z",
+  "news_count": 5,
+  "evidence_chars": 9443,
+  "engine": "last30days"
+}
